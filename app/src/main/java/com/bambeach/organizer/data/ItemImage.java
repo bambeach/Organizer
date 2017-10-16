@@ -1,9 +1,15 @@
 package com.bambeach.organizer.data;
 
+import java.util.UUID;
+
 public final class ItemImage {
     private final String mFileName;
     private final String mImageId;
     private final String mItemId;
+
+    public ItemImage(String filename, String itemId) {
+        this(filename, UUID.randomUUID().toString(), itemId);
+    }
 
     public ItemImage(String fileName, String imageId, String itemId) {
         mFileName = fileName;

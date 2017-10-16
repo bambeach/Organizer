@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +11,12 @@ import android.view.ViewGroup;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.adapters.ItemsRecyclerViewAdapter;
+import com.bambeach.organizer.data.Category;
 import com.bambeach.organizer.data.Item;
-import com.bambeach.organizer.items.dummy.DummyContent;
-import com.bambeach.organizer.items.dummy.DummyContent.DummyItem;
+import com.bambeach.organizer.data.database.OrganizerDataSource;
+import com.bambeach.organizer.data.database.OrganizerRepository;
+
+import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -24,11 +26,13 @@ import com.bambeach.organizer.items.dummy.DummyContent.DummyItem;
  */
 public class ItemFragment extends Fragment {
 
-    // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
-    // TODO: Customize parameters
+    public static final String TAG = "ItemFragment";
+
     private int mColumnCount = 2;
+    private String mCategoryId;
     private OnListFragmentInteractionListener mListener;
+    private OrganizerRepository mRepository;
+    private ItemsRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -37,23 +41,22 @@ public class ItemFragment extends Fragment {
     public ItemFragment() {
     }
 
-    // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
-    public static ItemFragment newInstance(int columnCount) {
-        ItemFragment fragment = new ItemFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
+    public static ItemFragment newInstance(String categoryId) {
+        ItemFragment itemFragment = new ItemFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(Category.CATEGORY_ID_KEY, categoryId);
+        itemFragment.setArguments(bundle);
+        return itemFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+        Bundle bundle = getArguments();
+        if (bundle != null && bundle.containsKey(Category.CATEGORY_ID_KEY)) {
+            mCategoryId = bundle.getString(Category.CATEGORY_ID_KEY);
         }
+        mRepository = OrganizerRepository.getInstance(getContext());
     }
 
     @Override
@@ -61,20 +64,36 @@ public class ItemFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_item_list, container, false);
 
-        // Set the adapter
+        // Set the mAdapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            if (mColumnCount <= 1) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            } else {
-                recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
+            final RecyclerView recyclerView = (RecyclerView) view;
+            recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
+            if (mCategoryId != null) {
+                mRepository.getItems(mCategoryId, new OrganizerDataSource.LoadItemsCallback() {
+                    @Override
+                    public void onItemsLoaded(List<Item> items) {
+                        mAdapter = new ItemsRecyclerViewAdapter(items, mListener);
+                        recyclerView.setAdapter(mAdapter);
+                    }
+
+                    @Override
+                    public void onDataNotAvailable() {
+
+                    }
+                });
             }
-            recyclerView.setAdapter(new ItemsRecyclerViewAdapter(DummyContent.ITEMS, mListener));
         }
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
+        }
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -93,6 +112,22 @@ public class ItemFragment extends Fragment {
         mListener = null;
     }
 
+    public void refreshData(String categoryId) {
+        if (mAdapter != null) {
+            mRepository.getItems(categoryId, new OrganizerDataSource.LoadItemsCallback() {
+                @Override
+                public void onItemsLoaded(List<Item> items) {
+                    mAdapter.setItems(items);
+                }
+
+                @Override
+                public void onDataNotAvailable() {
+
+                }
+            });
+        }
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -104,7 +139,6 @@ public class ItemFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onListFragmentInteraction(Item item);
     }
 }

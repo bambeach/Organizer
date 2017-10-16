@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/card_margin_vertical"
+    android:layout_marginBottom="@dimen/card_margin_vertical"
+    android:layout_marginStart="@dimen/card_margin_horizontal"
+    android:layout_marginEnd="@dimen/card_margin_horizontal"
+    card_view:cardCornerRadius="@dimen/card_corner_radius">
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -11,14 +18,22 @@
             android:id="@+id/item_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:src="@mipmap/ic_image_black_48dp"
             android:contentDescription="@string/title_activity_items" />
 
         <TextView
             android:id="@+id/item_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
-            android:textAppearance="?attr/textAppearanceListItem" />
+            android:layout_alignBottom="@+id/item_image"
+            android:padding="@dimen/text_margin"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textAppearance="?attr/titleTextAppearance"
+            android:background="#6D455A64"
+            style="@style/Base.TextAppearance.AppCompat.Title"/>
 
     </RelativeLayout>
 

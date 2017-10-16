@@ -7,7 +7,7 @@ import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.ItemImage;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +46,13 @@ public class OrganizerRepository implements OrganizerDataSource {
         dataSource.getCategories(new LoadCategoriesCallback() {
             @Override
             public void onCategoriesLoaded(List<Category> categories) {
+                if (cachedCategories == null) {
+                    cachedCategories = new LinkedHashMap<>(categories.size());
+                }
+                cachedCategories.clear();
+                for (Category category : categories) {
+                    cachedCategories.put(category.getCategoryId(), category);
+                }
                 categoriesCallback.onCategoriesLoaded(new ArrayList<>(cachedCategories.values()));
             }
 
@@ -76,7 +83,7 @@ public class OrganizerRepository implements OrganizerDataSource {
             @Override
             public void onCategoryLoaded(Category category) {
                 if (cachedCategories == null) {
-                    cachedCategories = new HashMap<>();
+                    cachedCategories = new LinkedHashMap<>();
                 }
                 cachedCategories.put(category.getCategoryId(), category);
                 categoryCallback.onCategoryLoaded(category);
@@ -97,7 +104,7 @@ public class OrganizerRepository implements OrganizerDataSource {
 
         dataSource.saveCategory(category);
         if (cachedCategories == null) {
-            cachedCategories = new HashMap<>();
+            cachedCategories = new LinkedHashMap<>();
         }
         cachedCategories.put(category.getCategoryId(), category);
     }
@@ -108,7 +115,7 @@ public class OrganizerRepository implements OrganizerDataSource {
 
         Category updatedCategory = new Category(category.getName(), category.getCategoryId());
         if (cachedCategories == null) {
-            cachedCategories = new HashMap<>();
+            cachedCategories = new LinkedHashMap<>();
         }
         cachedCategories.put(category.getCategoryId(), updatedCategory);
     }
@@ -123,19 +130,26 @@ public class OrganizerRepository implements OrganizerDataSource {
     }
 
     @Override
-    public void getItems(final LoadItemsCallback itemsCallback) {
-        if (itemsCallback == null) {
+    public void getItems(String categoryId, final LoadItemsCallback itemsCallback) {
+        if (categoryId == null || itemsCallback == null) {
             return;
         }
 
-        if (cachedItems != null) {
-            itemsCallback.onItemsLoaded(new ArrayList<>(cachedItems.values()));
-            return;
-        }
+//        if (cachedItems != null) {
+//            itemsCallback.onItemsLoaded(new ArrayList<>(cachedItems.values()));
+//            return;
+//        }
 
-        dataSource.getItems(new LoadItemsCallback() {
+        dataSource.getItems(categoryId, new LoadItemsCallback() {
             @Override
             public void onItemsLoaded(List<Item> items) {
+                if (cachedItems == null) {
+                    cachedItems = new LinkedHashMap<>(items.size());
+                }
+                cachedItems.clear();
+                for (Item item : items) {
+                    cachedItems.put(item.getItemId(), item);
+                }
                 itemsCallback.onItemsLoaded(new ArrayList<>(cachedItems.values()));
             }
 
@@ -166,7 +180,7 @@ public class OrganizerRepository implements OrganizerDataSource {
             @Override
             public void onItemLoaded(Item item) {
                 if (cachedItems == null) {
-                    cachedItems = new HashMap<>();
+                    cachedItems = new LinkedHashMap<>();
                 }
                 cachedItems.put(item.getItemId(), item);
                 itemCallback.onItemLoaded(item);
@@ -187,7 +201,7 @@ public class OrganizerRepository implements OrganizerDataSource {
 
         dataSource.saveItem(item);
         if (cachedItems == null) {
-            cachedItems = new HashMap<>();
+            cachedItems = new LinkedHashMap<>();
         }
         cachedItems.put(item.getItemId(), item);
     }
@@ -196,9 +210,9 @@ public class OrganizerRepository implements OrganizerDataSource {
     public void updateItem(Item item) {
         dataSource.updateItem(item);
 
-        Item updatedItem = new Item(item.getName(), item.getDescription(), item.getItemId(), item.getCategoryId());
+        Item updatedItem = new Item(item.getName(), item.getDescription(), item.getItemId(), item.getImageId(), item.getCategoryId());
         if (cachedItems == null) {
-            cachedItems = new HashMap<>();
+            cachedItems = new LinkedHashMap<>();
         }
         cachedItems.put(item.getItemId(), updatedItem);
     }
@@ -244,7 +258,7 @@ public class OrganizerRepository implements OrganizerDataSource {
             @Override
             public void onImageLoaded(ItemImage image) {
                 if (cachedImages == null) {
-                    cachedImages = new HashMap<>();
+                    cachedImages = new LinkedHashMap<>();
                 }
                 cachedImages.put(image.getImageId(), image);
                 imageCallback.onImageLoaded(image);
@@ -265,7 +279,7 @@ public class OrganizerRepository implements OrganizerDataSource {
 
         dataSource.saveImage(image);
         if (cachedImages == null) {
-            cachedImages = new HashMap<>();
+            cachedImages = new LinkedHashMap<>();
         }
         cachedImages.put(image.getImageId(), image);
     }
@@ -276,7 +290,7 @@ public class OrganizerRepository implements OrganizerDataSource {
 
         ItemImage updatedImage = new ItemImage(image.getFileName(), image.getImageId(), image.getItemId());
         if (cachedImages == null) {
-            cachedImages = new HashMap<>();
+            cachedImages = new LinkedHashMap<>();
         }
         cachedImages.put(image.getImageId(), updatedImage);
     }

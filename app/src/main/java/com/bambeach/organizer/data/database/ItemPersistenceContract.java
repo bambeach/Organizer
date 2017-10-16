@@ -12,6 +12,7 @@ public final class ItemPersistenceContract {
         public static final String COLUMN_NAME_ITEM_ID = "itemid";
         public static final String COLUMN_NAME_ITEM_NAME = "name";
         public static final String COLUMN_NAME_DESCRIPTION = "description";
+        public static final String COLUMN_NAME_IMAGE_ID = "image_id";
         public static final String COLUMN_NAME_CATEGORY_ID = "categoryid";
     }
 }

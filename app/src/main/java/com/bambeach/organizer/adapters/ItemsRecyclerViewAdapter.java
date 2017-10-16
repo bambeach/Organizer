@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecyclerViewAdapter.ViewHolder> {
 
-    private final List<Item> mValues;
+    private List<Item> mValues;
     private final OnListFragmentInteractionListener mListener;
 
     public ItemsRecyclerViewAdapter(List<Item> items, OnListFragmentInteractionListener listener) {
@@ -39,6 +39,10 @@ public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecycler
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
         //holder.mImageView.setText(mValues.get(position).id);
+//        String imageId = holder.mItem.getImageId();
+//        if (imageId == null || imageId.isEmpty()) {
+//            holder.mImageView.setImageResource(android.R.drawable.gallery_thumb);
+//        }
         holder.mTextView.setText(mValues.get(position).getName());
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +60,13 @@ public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecycler
     @Override
     public int getItemCount() {
         return mValues.size();
+    }
+
+    public void setItems(List<Item> items) {
+        mValues.clear();
+        mValues = items;
+        notifyDataSetChanged();
+//        notifyItemInserted(items.size() - 1);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

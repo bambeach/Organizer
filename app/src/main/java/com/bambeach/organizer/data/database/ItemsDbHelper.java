@@ -14,6 +14,7 @@ public class ItemsDbHelper extends SQLiteOpenHelper {
                     ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID + TEXT_TYPE + " PRIMARY KEY," +
                     ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME + TEXT_TYPE + COMMA_SEP +
                     ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION + TEXT_TYPE + COMMA_SEP +
+                    ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID + TEXT_TYPE + COMMA_SEP +
                     ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID + TEXT_TYPE + " )";
 
     public ItemsDbHelper(Context context) {

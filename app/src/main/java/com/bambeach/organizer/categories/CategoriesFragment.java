@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,6 @@ import android.view.ViewGroup;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.adapters.CategoriesRecyclerViewAdapter;
-import com.bambeach.organizer.categories.dummy.DummyContent;
 import com.bambeach.organizer.data.Category;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
@@ -28,11 +26,10 @@ import java.util.List;
 public class CategoriesFragment extends Fragment {
 
     public static final String TAG = "CategoriesFragment";
-    private static final String COLUMN_COUNT = "column_count";
-    // TODO: Customize parameters
     private int mColumnCount = 2;
     private OnListFragmentInteractionListener mListener;
     private OrganizerRepository mRepository;
+    private CategoriesRecyclerViewAdapter adapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -41,23 +38,13 @@ public class CategoriesFragment extends Fragment {
     public CategoriesFragment() {
     }
 
-    // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
     public static CategoriesFragment newInstance(int columnCount) {
-        CategoriesFragment fragment = new CategoriesFragment();
-        Bundle args = new Bundle();
-        args.putInt(COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
+        return new CategoriesFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(COLUMN_COUNT);
-        }
 
         mRepository = OrganizerRepository.getInstance(getContext());
     }
@@ -71,15 +58,13 @@ public class CategoriesFragment extends Fragment {
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             final RecyclerView recyclerView = (RecyclerView) view;
-            if (mColumnCount <= 1) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            } else {
-                recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-            }
+            recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
+//            recyclerView.setHasFixedSize(true);
             mRepository.getCategories(new OrganizerDataSource.LoadCategoriesCallback() {
                 @Override
                 public void onCategoriesLoaded(List<Category> categories) {
-                    recyclerView.setAdapter(new CategoriesRecyclerViewAdapter(categories, mListener));
+                    adapter = new CategoriesRecyclerViewAdapter(categories, mListener);
+                    recyclerView.setAdapter(adapter);
             }
 
                 @Override
@@ -108,6 +93,22 @@ public class CategoriesFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public void refreshData() {
+        if (adapter != null) {
+            mRepository.getCategories(new OrganizerDataSource.LoadCategoriesCallback() {
+                @Override
+                public void onCategoriesLoaded(List<Category> categories) {
+                    adapter.setCategoryList(categories);
+                }
+
+                @Override
+                public void onDataNotAvailable() {
+
+                }
+            });
+        }
     }
 
     /**

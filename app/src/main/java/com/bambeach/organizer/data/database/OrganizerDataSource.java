@@ -43,7 +43,7 @@ public interface OrganizerDataSource {
 
     void deleteCategory(String categoryId);
 
-    void getItems(LoadItemsCallback itemsCallback);
+    void getItems(String categoryId, LoadItemsCallback itemsCallback);
 
     void getItem(String itemId, LoadItemCallback itemCallback);
 

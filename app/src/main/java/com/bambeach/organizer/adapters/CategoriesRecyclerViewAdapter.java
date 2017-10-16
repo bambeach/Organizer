@@ -9,23 +9,22 @@ import android.widget.TextView;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.categories.CategoriesFragment.OnListFragmentInteractionListener;
-import com.bambeach.organizer.categories.dummy.DummyContent.DummyItem;
 import com.bambeach.organizer.data.Category;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {@link Category} and makes a call to the
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
 public class CategoriesRecyclerViewAdapter extends RecyclerView.Adapter<CategoriesRecyclerViewAdapter.ViewHolder> {
 
-    private final List<Category> categoryList;
+    private List<Category> mCategoryList;
     private final OnListFragmentInteractionListener mListener;
 
     public CategoriesRecyclerViewAdapter(List<Category> items, OnListFragmentInteractionListener listener) {
-        categoryList = items;
+        mCategoryList = items;
         mListener = listener;
     }
 
@@ -38,8 +37,8 @@ public class CategoriesRecyclerViewAdapter extends RecyclerView.Adapter<Categori
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.category = categoryList.get(position);
-        holder.categoryName.setText(categoryList.get(position).getName());
+        holder.category = mCategoryList.get(position);
+        holder.categoryName.setText(mCategoryList.get(position).getName());
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,7 +54,12 @@ public class CategoriesRecyclerViewAdapter extends RecyclerView.Adapter<Categori
 
     @Override
     public int getItemCount() {
-        return categoryList.size();
+        return mCategoryList.size();
+    }
+
+    public void setCategoryList(List<Category> categoryList) {
+        mCategoryList = categoryList;
+        notifyDataSetChanged();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

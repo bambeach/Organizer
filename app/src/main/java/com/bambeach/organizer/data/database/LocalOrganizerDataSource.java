@@ -150,7 +150,7 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
     }
 
     @Override
-    public void getItems(LoadItemsCallback itemsCallback) {
+    public void getItems(String categoryId, LoadItemsCallback itemsCallback) {
         List<Item> items = new ArrayList<>();
         SQLiteDatabase database = itemsDbHelper.getReadableDatabase();
 
@@ -158,18 +158,23 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION,
+                ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID
         };
 
-        Cursor cursor = database.query(ItemPersistenceContract.ItemEntry.TABLE_NAME, projection, null, null, null, null, null);
+        String selection = ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
+        String[] selectionArgs = {categoryId};
+
+        Cursor cursor = database.query(ItemPersistenceContract.ItemEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
 
         if (cursor != null && cursor.getCount() > 0) {
             while (cursor.moveToNext()) {
                 String itemId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID));
                 String itemName = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME));
                 String itemDescription = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION));
-                String categoryId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID));
-                Item item = new Item(itemName, itemDescription, itemId, categoryId);
+                String itemImageId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID));
+                String itemCategoryId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID));
+                Item item = new Item(itemName, itemDescription, itemId, itemImageId, itemCategoryId);
                 items.add(item);
             }
         }
@@ -194,6 +199,7 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION,
+                ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID,
                 ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID
         };
 
@@ -208,8 +214,9 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
             String entryId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID));
             String entryName = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME));
             String entryDescription = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION));
+            String entryImageId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID));
             String categoryId = cursor.getString(cursor.getColumnIndexOrThrow(ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID));
-            item = new Item(entryName, entryDescription, entryId, categoryId);
+            item = new Item(entryName, entryDescription, entryId, entryImageId, categoryId);
         }
         if (cursor != null) {
             cursor.close();
@@ -235,6 +242,7 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID, item.getItemId());
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME, item.getName());
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION, item.getDescription());
+        values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID, item.getImageId());
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID, item.getCategoryId());
 
         database.insert(ItemPersistenceContract.ItemEntry.TABLE_NAME, null, values);
@@ -252,6 +260,7 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
         ContentValues values = new ContentValues();
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_NAME, item.getName());
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_DESCRIPTION, item.getDescription());
+        values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_IMAGE_ID, item.getImageId());
         values.put(ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID, item.getCategoryId());
 
         String selection = ItemPersistenceContract.ItemEntry.COLUMN_NAME_ITEM_ID + " LIKE ?";
@@ -274,13 +283,18 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
 
     @Override
     public void deleteAllItems(String categoryId) {
-        SQLiteDatabase database = itemsDbHelper.getWritableDatabase();
+        SQLiteDatabase itemsDatabase = itemsDbHelper.getWritableDatabase();
 
         String selection = ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
+        String categorySelection = CategoryPersistenceContract.CategoryEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
         String[] selectionArgs = {categoryId};
 
-        database.delete(ItemPersistenceContract.ItemEntry.TABLE_NAME, selection, selectionArgs);
-        database.close();
+        itemsDatabase.delete(ItemPersistenceContract.ItemEntry.TABLE_NAME, selection, selectionArgs);
+        itemsDatabase.close();
+
+        SQLiteDatabase categoryDatabase = categoryDbHelper.getWritableDatabase();
+        categoryDatabase.delete(CategoryPersistenceContract.CategoryEntry.TABLE_NAME, categorySelection, selectionArgs);
+        categoryDatabase.close();
     }
 
     @Override
