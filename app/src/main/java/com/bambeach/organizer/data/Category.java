@@ -2,6 +2,8 @@ package com.bambeach.organizer.data;
 
 public final class Category {
 
+    public static final String CATEGORY_ID_KEY = "category_id_key";
+
     private final String mName;
     private final String mCategoryId;
 

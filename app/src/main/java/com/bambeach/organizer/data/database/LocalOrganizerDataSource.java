@@ -218,7 +218,7 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
         database.close();
 
         if (item != null) {
-            itemCallback.onTaskLoaded(item);
+            itemCallback.onItemLoaded(item);
         } else {
             itemCallback.onDataNotAvailable();
         }

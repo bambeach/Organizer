@@ -17,9 +17,9 @@ public class OrganizerRepository implements OrganizerDataSource {
 
     private final LocalOrganizerDataSource dataSource;
 
-    Map<String, Category> cachedCategories;
-    Map<String, Item> cachedItems;
-    Map<String, ItemImage> cachedImages;
+    private Map<String, Category> cachedCategories;
+    private Map<String, Item> cachedItems;
+    private Map<String, ItemImage> cachedImages;
 
     private OrganizerRepository(LocalOrganizerDataSource localOrganizerDataSource){
         dataSource = localOrganizerDataSource;
@@ -39,15 +39,14 @@ public class OrganizerRepository implements OrganizerDataSource {
         }
 
         if (cachedCategories != null) {
-            categoriesCallback.onCategoriesLoaded(new ArrayList<Category>(cachedCategories.values()));
+            categoriesCallback.onCategoriesLoaded(new ArrayList<>(cachedCategories.values()));
             return;
         }
 
         dataSource.getCategories(new LoadCategoriesCallback() {
             @Override
             public void onCategoriesLoaded(List<Category> categories) {
-                //refreshCategoriesCache(categories);
-                categoriesCallback.onCategoriesLoaded(new ArrayList<Category>(cachedCategories.values()));
+                categoriesCallback.onCategoriesLoaded(new ArrayList<>(cachedCategories.values()));
             }
 
             @Override
@@ -77,7 +76,7 @@ public class OrganizerRepository implements OrganizerDataSource {
             @Override
             public void onCategoryLoaded(Category category) {
                 if (cachedCategories == null) {
-                    cachedCategories = new HashMap<String, Category>();
+                    cachedCategories = new HashMap<>();
                 }
                 cachedCategories.put(category.getCategoryId(), category);
                 categoryCallback.onCategoryLoaded(category);
@@ -92,66 +91,202 @@ public class OrganizerRepository implements OrganizerDataSource {
 
     @Override
     public void saveCategory(Category category) {
+        if (category == null) {
+            return;
+        }
 
+        dataSource.saveCategory(category);
+        if (cachedCategories == null) {
+            cachedCategories = new HashMap<>();
+        }
+        cachedCategories.put(category.getCategoryId(), category);
     }
 
     @Override
     public void updateCategory(Category category) {
+        dataSource.updateCategory(category);
 
+        Category updatedCategory = new Category(category.getName(), category.getCategoryId());
+        if (cachedCategories == null) {
+            cachedCategories = new HashMap<>();
+        }
+        cachedCategories.put(category.getCategoryId(), updatedCategory);
     }
 
     @Override
     public void deleteCategory(String categoryId) {
-
+        if (categoryId == null || categoryId.isEmpty()) {
+            return;
+        }
+        dataSource.deleteCategory(categoryId);
+        cachedCategories.remove(categoryId);
     }
 
     @Override
-    public void getItems(LoadItemsCallback itemsCallback) {
+    public void getItems(final LoadItemsCallback itemsCallback) {
+        if (itemsCallback == null) {
+            return;
+        }
 
+        if (cachedItems != null) {
+            itemsCallback.onItemsLoaded(new ArrayList<>(cachedItems.values()));
+            return;
+        }
+
+        dataSource.getItems(new LoadItemsCallback() {
+            @Override
+            public void onItemsLoaded(List<Item> items) {
+                itemsCallback.onItemsLoaded(new ArrayList<>(cachedItems.values()));
+            }
+
+            @Override
+            public void onDataNotAvailable() {
+                itemsCallback.onDataNotAvailable();
+            }
+        });
     }
 
     @Override
-    public void getItem(String itemId, LoadItemCallback itemCallback) {
+    public void getItem(String itemId, final LoadItemCallback itemCallback) {
+        if (itemId == null || itemCallback == null) {
+            return;
+        }
 
+        Item item = null;
+        if (cachedItems != null && !cachedItems.isEmpty()) {
+            item = cachedItems.get(itemId);
+        }
+
+        if (item != null) {
+            itemCallback.onItemLoaded(item);
+            return;
+        }
+
+        dataSource.getItem(itemId, new LoadItemCallback() {
+            @Override
+            public void onItemLoaded(Item item) {
+                if (cachedItems == null) {
+                    cachedItems = new HashMap<>();
+                }
+                cachedItems.put(item.getItemId(), item);
+                itemCallback.onItemLoaded(item);
+            }
+
+            @Override
+            public void onDataNotAvailable() {
+
+            }
+        });
     }
 
     @Override
     public void saveItem(Item item) {
+        if (item == null) {
+            return;
+        }
 
+        dataSource.saveItem(item);
+        if (cachedItems == null) {
+            cachedItems = new HashMap<>();
+        }
+        cachedItems.put(item.getItemId(), item);
     }
 
     @Override
     public void updateItem(Item item) {
+        dataSource.updateItem(item);
 
+        Item updatedItem = new Item(item.getName(), item.getDescription(), item.getItemId(), item.getCategoryId());
+        if (cachedItems == null) {
+            cachedItems = new HashMap<>();
+        }
+        cachedItems.put(item.getItemId(), updatedItem);
     }
 
     @Override
     public void deleteItem(String itemId) {
-
+        if (itemId == null || itemId.isEmpty()) {
+            return;
+        }
+        dataSource.deleteItem(itemId);
+        cachedItems.remove(itemId);
     }
 
     @Override
     public void deleteAllItems(String categoryId) {
+        if (categoryId == null || categoryId.isEmpty()) {
+            return;
+        }
+        dataSource.deleteAllItems(categoryId);
 
+        if (cachedItems != null) {
+            cachedItems.clear();
+        }
     }
 
     @Override
-    public void getImage(String imageId, LoadImageCallback imageCallback) {
+    public void getImage(String imageId, final LoadImageCallback imageCallback) {
+        if (imageId == null || imageCallback == null) {
+            return;
+        }
 
+        ItemImage image = null;
+        if (cachedImages != null && !cachedImages.isEmpty()) {
+            image = cachedImages.get(imageId);
+        }
+
+        if (image != null) {
+            imageCallback.onImageLoaded(image);
+            return;
+        }
+
+        dataSource.getImage(imageId, new LoadImageCallback() {
+            @Override
+            public void onImageLoaded(ItemImage image) {
+                if (cachedImages == null) {
+                    cachedImages = new HashMap<>();
+                }
+                cachedImages.put(image.getImageId(), image);
+                imageCallback.onImageLoaded(image);
+            }
+
+            @Override
+            public void onDataNotAvailable() {
+
+            }
+        });
     }
 
     @Override
     public void saveImage(ItemImage image) {
+        if (image == null) {
+            return;
+        }
 
+        dataSource.saveImage(image);
+        if (cachedImages == null) {
+            cachedImages = new HashMap<>();
+        }
+        cachedImages.put(image.getImageId(), image);
     }
 
     @Override
     public void updateImage(ItemImage image) {
+        dataSource.updateImage(image);
 
+        ItemImage updatedImage = new ItemImage(image.getFileName(), image.getImageId(), image.getItemId());
+        if (cachedImages == null) {
+            cachedImages = new HashMap<>();
+        }
+        cachedImages.put(image.getImageId(), updatedImage);
     }
 
     @Override
     public void deleteImage(String imageId) {
-
+        if (imageId == null || imageId.isEmpty()) {
+            return;
+        }
+        dataSource.deleteImage(imageId);
+        cachedItems.remove(imageId);
     }
 }

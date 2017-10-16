@@ -24,7 +24,7 @@ public interface OrganizerDataSource {
     }
 
     interface LoadItemCallback {
-        void onTaskLoaded(Item item);
+        void onItemLoaded(Item item);
         void onDataNotAvailable();
     }
 

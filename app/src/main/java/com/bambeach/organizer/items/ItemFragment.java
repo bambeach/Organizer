@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.adapters.ItemsRecyclerViewAdapter;
+import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.items.dummy.DummyContent;
 import com.bambeach.organizer.items.dummy.DummyContent.DummyItem;
 
@@ -104,6 +105,6 @@ public class ItemFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item);
+        void onListFragmentInteraction(Item item);
     }
 }
