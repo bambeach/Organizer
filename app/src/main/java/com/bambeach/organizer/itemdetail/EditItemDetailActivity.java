@@ -1,12 +1,8 @@
 package com.bambeach.organizer.itemdetail;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -17,10 +13,8 @@ import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,7 +23,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.bambeach.organizer.R;
-import com.bambeach.organizer.camera.CameraActivity;
 import com.bambeach.organizer.data.Category;
 import com.bambeach.organizer.data.FileIO;
 import com.bambeach.organizer.data.ImageIO;
@@ -40,11 +33,6 @@ import com.bambeach.organizer.data.database.OrganizerRepository;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 public class EditItemDetailActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
