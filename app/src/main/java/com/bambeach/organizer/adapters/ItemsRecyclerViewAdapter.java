@@ -9,10 +9,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bambeach.organizer.R;
+import com.bambeach.organizer.data.ImageIO;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.items.ItemFragment.OnListFragmentInteractionListener;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.List;
 
 public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecyclerViewAdapter.ViewHolder> {
@@ -39,12 +41,12 @@ public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecycler
         holder.mItem = mValues.get(position);
         //holder.mImageView.setText(mValues.get(position).id);
         String imageId = holder.mItem.getImageId();
-//        if (imageId == null || imageId.isEmpty()) {
+        File imageFile = ImageIO.getImageFile(imageId);
         if (!imageId.equals("")) {
             //holder.mImageView.setImageResource(android.R.drawable.gallery_thumb);
             Picasso.with(mContext)
-                    .load(holder.mItem.getImageId())
-                    .resize(100, 100)
+                    .load(imageFile)
+                    .resize(200, 200)
                     .centerCrop()
                     .into(holder.mImageView);
         }

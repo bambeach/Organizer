@@ -1,16 +1,26 @@
 package com.bambeach.organizer.itemdetail;
 
+import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,20 +31,33 @@ import android.widget.ImageView;
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.camera.CameraActivity;
 import com.bambeach.organizer.data.Category;
+import com.bambeach.organizer.data.FileIO;
+import com.bambeach.organizer.data.ImageIO;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.ItemImage;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
 import com.squareup.picasso.Picasso;
 
-public class EditItemDetailActivity extends AppCompatActivity {
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
-    private static int RESULT_LOAD_IMAGE = 0x1;
+public class EditItemDetailActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+
+    private static final int RESULT_LOAD_IMAGE = 0x1;
+    private static final int RESULT_CAPTURE_IMAGE = 0x2;
+    private static final int REQUEST_CAMERA_PERMISSION = 0x3;
 
     private ItemImage mImage;
     private ItemImage mTempImage;
     private Item mItem;
     private String mItemId;
+    private String mImageId;
     private String mCategoryId;
     private OrganizerRepository mRepository;
 
@@ -57,6 +80,7 @@ public class EditItemDetailActivity extends AppCompatActivity {
             actionBar.setTitle(R.string.title_add_item);
         }
 
+        FileIO.initialize(getApplicationContext());
         mRepository = OrganizerRepository.getInstance(getApplicationContext());
 
         itemImageView = (ImageView) findViewById(R.id.item_detail_image);
@@ -101,30 +125,40 @@ public class EditItemDetailActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(EditItemDetailActivity.this);
-                dialogBuilder.setTitle(R.string.title_change_photo_dialog)
-                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .setItems(R.array.change_photo_dialog_items_array, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                switch (which) {
-                                    case 0:
-                                        takePhotoOnClick();
-                                        break;
-                                    case 1:
-                                        choosePhotoOnClick();
-                                        break;
-                                }
-                                dialog.dismiss();
-                            }
-                        })
-                        .create()
-                        .show();
+                if (ContextCompat.checkSelfPermission(EditItemDetailActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(EditItemDetailActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+                    return;
+                }
+                mImageId = UUID.randomUUID().toString();
+                File imageFile = ImageIO.getImageFile(mImageId);
+                Uri imageUri = FileProvider.getUriForFile(EditItemDetailActivity.this, "com.bambeach.organizer.fileprovider", imageFile);
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                startActivityForResult(intent, RESULT_CAPTURE_IMAGE);
+//                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(EditItemDetailActivity.this);
+//                dialogBuilder.setTitle(R.string.title_change_photo_dialog)
+//                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                dialog.dismiss();
+//                            }
+//                        })
+//                        .setItems(R.array.change_photo_dialog_items_array, new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                switch (which) {
+//                                    case 0:
+//                                        takePhotoOnClick();
+//                                        break;
+//                                    case 1:
+//                                        choosePhotoOnClick();
+//                                        break;
+//                                }
+//                                dialog.dismiss();
+//                            }
+//                        })
+//                        .create()
+//                        .show();
             }
         });
 
@@ -146,22 +180,28 @@ public class EditItemDetailActivity extends AppCompatActivity {
                 String itemDescription = itemDescriptionEditText.getText().toString();
 
                 Item savedItem;
-                if (isAddMode) {
-                    savedItem = new Item(itemName, itemDescription, mTempImage.getImageId(), mCategoryId);
-                    mRepository.saveItem(savedItem);
-                    mImage = new ItemImage(mTempImage.getFileName(), mTempImage.getImageId(), savedItem.getItemId());
-                } else {
-                    if (mItem.getImageId() != null && !mItem.getImageId().isEmpty()) {
-                        savedItem = new Item(itemName, itemDescription, mItemId, mItem.getImageId(), mItem.getCategoryId());
+                if (mTempImage != null) {
+                    if (isAddMode) {
+                        savedItem = new Item(itemName, itemDescription, mTempImage.getImageId(), mCategoryId);
+                        mRepository.saveItem(savedItem);
+                        mImage = new ItemImage(mTempImage.getFileName(), mTempImage.getImageId(), savedItem.getItemId());
                     } else {
-                        savedItem = new Item(itemName, itemDescription, mItemId, mImage.getImageId(), mItem.getCategoryId());
+                        savedItem = new Item(itemName, itemDescription, mItemId, mTempImage.getImageId(), mItem.getCategoryId());
+                        mRepository.updateItem(savedItem);
                     }
 
-                    mRepository.updateItem(savedItem);
+                    if (mImage != null) {
+                        mRepository.saveImage(mImage);
+                    }
+                } else {
+                    if (isAddMode) {
+                        savedItem = new Item(itemName, itemDescription, "", mCategoryId);
+                        mRepository.saveItem(savedItem);
+                    } else {
+                        savedItem = new Item(itemName, itemDescription, mItemId, "", mItem.getCategoryId());
+                        mRepository.updateItem(savedItem);
+                    }
                 }
-
-                mRepository.saveImage(mImage);
-
                 Intent upIntent = NavUtils.getParentActivityIntent(this);
                 upIntent.putExtra(Item.ITEM_ID_KEY, savedItem.getItemId());
                 NavUtils.navigateUpTo(this, upIntent);
@@ -176,43 +216,87 @@ public class EditItemDetailActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && data != null) {
-            Uri selectedImage = data.getData();
-            Picasso.with(EditItemDetailActivity.this)
-                    .load(selectedImage)
-                    .into(itemImageView);
-            String path = selectedImage.toString();//.getEncodedPath();
-            if (isAddMode) {
-                mTempImage = new ItemImage(path);
-            } else {
-                mImage = new ItemImage(path, mItemId);
-            }
 
-//            String[] filePathArg = {MediaStore.Images.Media.DATA};
+        switch (requestCode) {
+            case RESULT_CAPTURE_IMAGE:
+                if (resultCode == RESULT_OK) {
+                    File imageFile = ImageIO.getImageFile(mImageId);
+                    Picasso.with(EditItemDetailActivity.this)
+                            .load(imageFile)
+                            .into(itemImageView);
+                    mTempImage = new ItemImage(String.valueOf(imageFile.lastModified()), mImageId, null);
+                }
+                break;
+//            case RESULT_LOAD_IMAGE:
+//                if (resultCode == RESULT_OK && data != null) {
+//                    Uri imageData = data.getData();
+//                    Bitmap bitmap;
+//                    try {
+//                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageData);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                    String[] filePath = { MediaStore.Images.Media.DATA };
+//                    String picturePath = null;
+//                    Cursor cursor = getContentResolver().query(imageData,filePath, null, null, null);
 //
-//            Cursor cursor = getContentResolver().query(selectedImage, filePathArg, null, null, null);
-//            if (cursor != null && cursor.getCount() > 0) {
-//                cursor.moveToFirst();
-//                int index = cursor.getColumnIndex(filePathArg[0]);
-//                String path = cursor.getString(index);
+//                    if (cursor != null && cursor.getCount() > 0) {
+//                        cursor.moveToFirst();
+//                        int columnIndex = cursor.getColumnIndex(filePath[0]);
+//                        picturePath = cursor.getString(columnIndex);
+//                    }
+//                    if (cursor != null) {
+//                        cursor.close();
+//                    }
 //
-//                if (itemImageView != null) {
-//                    itemImageView.setImageBitmap(BitmapFactory.decodeFile(path));
+//                    String[] segments = picturePath.split("/");
+//                    int lastIndex = segments.length - 1;
+//                    byte[] bytes = Base64.decode(segments[lastIndex], Base64.DEFAULT);
+//                    String decodedString = new String(bytes);
+//
+//                    Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
+//                    mImageId = UUID.randomUUID().toString();
+//                    ImageIO.saveImage(mImageId, thumbnail);
+//                    File imageFile = ImageIO.getImageFile(mImageId);
+//                    Picasso.with(EditItemDetailActivity.this)
+//                            .load(imageFile)
+//                            .into(itemImageView);
+//                    mTempImage = new ItemImage(imageData.getLastPathSegment(), UUID.randomUUID().toString(), null);
 //                }
-//            }
-//            if (cursor != null) {
-//                cursor.close();
-//            }
+//                break;
         }
     }
 
     public void takePhotoOnClick() {
-        Intent intent = new Intent(this, CameraActivity.class);
-        startActivity(intent);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+            return;
+        }
+        mImageId = UUID.randomUUID().toString();
+        File imageFile = ImageIO.getImageFile(mImageId);
+        Uri imageUri = FileProvider.getUriForFile(this, "com.bambeach.organizer.fileprovider", imageFile);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        startActivityForResult(intent, RESULT_CAPTURE_IMAGE);
     }
 
-    public void choosePhotoOnClick() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, RESULT_LOAD_IMAGE);
+//    public void choosePhotoOnClick() {
+//        mImageId = UUID.randomUUID().toString();
+//        File imageFile = ImageIO.getImageFile(mImageId);
+//        Uri imageUri = FileProvider.getUriForFile(this, "com.bambeach.organizer.fileprovider", imageFile);
+//        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+//        startActivityForResult(intent, RESULT_LOAD_IMAGE);
+//    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                takePhotoOnClick();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 }

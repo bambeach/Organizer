@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path
+        name="item_images"
+        path="images/" />
+
+    <files-path
+        name="category_files"
+        path="categories/" />
+
+    <files-path
+        name="item_files"
+        path="items/" />
+
+</paths>

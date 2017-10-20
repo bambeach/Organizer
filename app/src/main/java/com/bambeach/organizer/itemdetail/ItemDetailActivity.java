@@ -3,7 +3,6 @@ package com.bambeach.organizer.itemdetail;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -11,17 +10,23 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bambeach.organizer.R;
+import com.bambeach.organizer.data.ImageIO;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
 
 public class ItemDetailActivity extends AppCompatActivity {
 
     private Item mItem;
-    private TextView itemDescriptionTextView;
+    private ImageView mItemImageView;
+    private TextView mItemDescriptionTextView;
     private OrganizerRepository mRepository;
 
     @Override
@@ -38,7 +43,8 @@ public class ItemDetailActivity extends AppCompatActivity {
 
         mRepository = OrganizerRepository.getInstance(getApplicationContext());
 
-        itemDescriptionTextView = (TextView) findViewById(R.id.item_description);
+        mItemDescriptionTextView = (TextView) findViewById(R.id.item_detail_description);
+        mItemImageView = (ImageView) findViewById(R.id.item_detail_image);
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(Item.ITEM_ID_KEY)) {
@@ -50,11 +56,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                         return;
                     }
                     mItem = item;
-                    itemDescriptionTextView.setText(mItem.getDescription());
-                    ActionBar actionBar = getSupportActionBar();
-                    if (actionBar != null) {
-                        actionBar.setTitle(mItem.getName());
-                    }
+                    loadItemDetails();
                 }
 
                 @Override
@@ -73,6 +75,14 @@ public class ItemDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mItem != null) {
+            loadItemDetails();
+        }
     }
 
     @Override
@@ -95,5 +105,22 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadItemDetails() {
+        mItemDescriptionTextView.setText(mItem.getDescription());
+        String imageId = mItem.getImageId();
+        if (!imageId.equals("")) {
+            File imageFile = ImageIO.getImageFile(imageId);
+            Picasso.with(ItemDetailActivity.this)
+                    .load(imageFile)
+                    .resize(500, 500)
+                    .centerCrop()
+                    .into(mItemImageView);
+        }
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setTitle(mItem.getName());
+        }
     }
 }

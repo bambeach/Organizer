@@ -12,6 +12,7 @@ import android.view.View;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.data.Category;
+import com.bambeach.organizer.data.FileIO;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
@@ -37,6 +38,7 @@ public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnL
             categoryId = intent.getStringExtra(Category.CATEGORY_ID_KEY);
         }
 
+        FileIO.initialize(getApplicationContext());
         mRepository = OrganizerRepository.getInstance(getApplicationContext());
 
         if (categoryId != null) {

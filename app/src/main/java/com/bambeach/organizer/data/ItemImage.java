@@ -8,11 +8,11 @@ public final class ItemImage {
     private final String mItemId;
 
     public ItemImage(String filename) {
-        this(UUID.randomUUID().toString(), filename, null);
+        this(filename, UUID.randomUUID().toString(), null);
     }
 
     public ItemImage(String filename, String itemId) {
-        this(UUID.randomUUID().toString(), filename, itemId);
+        this(filename, UUID.randomUUID().toString(), itemId);
     }
 
     public ItemImage(String fileName, String imageId, String itemId) {
