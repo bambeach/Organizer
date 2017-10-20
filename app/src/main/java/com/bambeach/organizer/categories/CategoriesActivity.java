@@ -20,6 +20,8 @@ import com.bambeach.organizer.items.ItemsActivity;
 
 public class CategoriesActivity extends AppCompatActivity implements CategoriesFragment.OnListFragmentInteractionListener {
 
+    OrganizerRepository mRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +35,8 @@ public class CategoriesActivity extends AppCompatActivity implements CategoriesF
         if (actionBar != null) {
             actionBar.setTitle(R.string.categories);
         }
+
+        mRepository = OrganizerRepository.getInstance(getApplicationContext());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -54,8 +58,7 @@ public class CategoriesActivity extends AppCompatActivity implements CategoriesF
                                     dialog.dismiss();
                                 }
                                 Category category = new Category(categoryName);
-                                OrganizerRepository repository = OrganizerRepository.getInstance(CategoriesActivity.this);
-                                repository.saveCategory(category);
+                                mRepository.saveCategory(category);
                                 CategoriesFragment fragment = (CategoriesFragment) getSupportFragmentManager().findFragmentByTag(CategoriesFragment.TAG);
                                 if (fragment != null) {
                                     fragment.refreshData();
@@ -78,6 +81,15 @@ public class CategoriesActivity extends AppCompatActivity implements CategoriesF
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.category_fragment_container, fragment, CategoriesFragment.TAG)
                 .commit();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        CategoriesFragment fragment = (CategoriesFragment) getSupportFragmentManager().findFragmentByTag(CategoriesFragment.TAG);
+        if (fragment != null) {
+            fragment.refreshData();
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,7 +57,7 @@ public class ItemFragment extends Fragment {
         if (bundle != null && bundle.containsKey(Category.CATEGORY_ID_KEY)) {
             mCategoryId = bundle.getString(Category.CATEGORY_ID_KEY);
         }
-        mRepository = OrganizerRepository.getInstance(getContext());
+        mRepository = OrganizerRepository.getInstance(getActivity().getApplicationContext());
     }
 
     @Override
@@ -73,13 +74,14 @@ public class ItemFragment extends Fragment {
                 mRepository.getItems(mCategoryId, new OrganizerDataSource.LoadItemsCallback() {
                     @Override
                     public void onItemsLoaded(List<Item> items) {
-                        mAdapter = new ItemsRecyclerViewAdapter(items, mListener);
+                        mAdapter = new ItemsRecyclerViewAdapter(getContext(), items, mListener);
                         recyclerView.setAdapter(mAdapter);
                     }
 
                     @Override
                     public void onDataNotAvailable() {
-
+                        mAdapter = new ItemsRecyclerViewAdapter(getContext(), new ArrayList<Item>(0), mListener);
+                        recyclerView.setAdapter(mAdapter);
                     }
                 });
             }
@@ -91,7 +93,7 @@ public class ItemFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (mAdapter != null) {
-            mAdapter.notifyDataSetChanged();
+            refreshData(mCategoryId);
         }
     }
 
@@ -122,7 +124,7 @@ public class ItemFragment extends Fragment {
 
                 @Override
                 public void onDataNotAvailable() {
-
+                    mAdapter.setItems(new ArrayList<Item>());
                 }
             });
         }

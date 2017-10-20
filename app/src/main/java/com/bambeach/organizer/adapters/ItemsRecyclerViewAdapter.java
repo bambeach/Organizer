@@ -1,5 +1,6 @@
 package com.bambeach.organizer.adapters;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,20 +11,18 @@ import android.widget.TextView;
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.items.ItemFragment.OnListFragmentInteractionListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-/**
- * {@link RecyclerView.Adapter} that can display a {@link Item} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
- */
 public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecyclerViewAdapter.ViewHolder> {
 
+    private Context mContext;
     private List<Item> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public ItemsRecyclerViewAdapter(List<Item> items, OnListFragmentInteractionListener listener) {
+    public ItemsRecyclerViewAdapter(Context context, List<Item> items, OnListFragmentInteractionListener listener) {
+        mContext = context;
         mValues = items;
         mListener = listener;
     }
@@ -39,10 +38,16 @@ public class ItemsRecyclerViewAdapter extends RecyclerView.Adapter<ItemsRecycler
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
         //holder.mImageView.setText(mValues.get(position).id);
-//        String imageId = holder.mItem.getImageId();
+        String imageId = holder.mItem.getImageId();
 //        if (imageId == null || imageId.isEmpty()) {
-//            holder.mImageView.setImageResource(android.R.drawable.gallery_thumb);
-//        }
+        if (!imageId.equals("")) {
+            //holder.mImageView.setImageResource(android.R.drawable.gallery_thumb);
+            Picasso.with(mContext)
+                    .load(holder.mItem.getImageId())
+                    .resize(100, 100)
+                    .centerCrop()
+                    .into(holder.mImageView);
+        }
         holder.mTextView.setText(mValues.get(position).getName());
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

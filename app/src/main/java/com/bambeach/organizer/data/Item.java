@@ -15,8 +15,13 @@ public final class Item {
     public Item(String name, String categoryId) {
         this(name, null, UUID.randomUUID().toString(), "", categoryId);
     }
+
     public Item(String name, String description, String categoryId) {
         this(name, description, UUID.randomUUID().toString(), "", categoryId);
+    }
+
+    public Item(String name, String description, String imageId, String categoryId) {
+        this(name, description, UUID.randomUUID().toString(), imageId, categoryId);
     }
 
     public Item(String name, String description, String itemId, String imageId, String categoryId) {

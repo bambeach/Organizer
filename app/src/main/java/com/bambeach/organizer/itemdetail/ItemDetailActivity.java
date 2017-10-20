@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.data.Item;
@@ -20,6 +21,8 @@ import com.bambeach.organizer.data.database.OrganizerRepository;
 public class ItemDetailActivity extends AppCompatActivity {
 
     private Item mItem;
+    private TextView itemDescriptionTextView;
+    private OrganizerRepository mRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,16 +36,21 @@ public class ItemDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        mRepository = OrganizerRepository.getInstance(getApplicationContext());
+
+        itemDescriptionTextView = (TextView) findViewById(R.id.item_description);
+
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(Item.ITEM_ID_KEY)) {
             String itemId = intent.getStringExtra(Item.ITEM_ID_KEY);
-            OrganizerRepository.getInstance(this).getItem(itemId, new OrganizerDataSource.LoadItemCallback() {
+            mRepository.getItem(itemId, new OrganizerDataSource.LoadItemCallback() {
                 @Override
                 public void onItemLoaded(Item item) {
                     if (item == null) {
                         return;
                     }
                     mItem = item;
+                    itemDescriptionTextView.setText(mItem.getDescription());
                     ActionBar actionBar = getSupportActionBar();
                     if (actionBar != null) {
                         actionBar.setTitle(mItem.getName());
@@ -60,8 +68,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Editing the Item would happen here", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(ItemDetailActivity.this, EditItemDetailActivity.class);
+                intent.putExtra(Item.ITEM_ID_KEY, mItem.getItemId());
+                startActivity(intent);
             }
         });
     }
@@ -81,7 +90,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                 onBackPressed();
                 return true;
             case R.id.action_delete:
-                OrganizerRepository.getInstance(this).deleteItem(mItem.getItemId());
+                mRepository.deleteItem(mItem.getItemId());
                 onBackPressed();
                 return true;
         }

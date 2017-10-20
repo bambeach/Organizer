@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bambeach.organizer">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/android_o"
@@ -32,6 +39,25 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.bambeach.organizer.items.ItemsActivity" />
         </activity>
+        <activity
+            android:name=".itemdetail.EditItemDetailActivity"
+            android:label="@string/title_activity_edit_item_detail"
+            android:parentActivityName=".itemdetail.ItemDetailActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bambeach.organizer.itemdetail.ItemDetailActivity" />
+        </activity>
+        <activity
+            android:name=".camera.CameraActivity"
+            android:label="@string/title_activity_camera"
+            android:parentActivityName=".itemdetail.EditItemDetailActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bambeach.organizer.itemdetail.EditItemDetailActivity" />
+        </activity>
+        <activity android:name=".itemdetail.ChoosePhotoActivity"></activity>
     </application>
 
 </manifest>

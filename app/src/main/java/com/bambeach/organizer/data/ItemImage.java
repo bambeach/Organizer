@@ -7,8 +7,12 @@ public final class ItemImage {
     private final String mImageId;
     private final String mItemId;
 
+    public ItemImage(String filename) {
+        this(UUID.randomUUID().toString(), filename, null);
+    }
+
     public ItemImage(String filename, String itemId) {
-        this(filename, UUID.randomUUID().toString(), itemId);
+        this(UUID.randomUUID().toString(), filename, itemId);
     }
 
     public ItemImage(String fileName, String imageId, String itemId) {

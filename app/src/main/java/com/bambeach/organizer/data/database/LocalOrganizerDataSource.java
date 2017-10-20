@@ -286,15 +286,15 @@ class LocalOrganizerDataSource implements OrganizerDataSource {
         SQLiteDatabase itemsDatabase = itemsDbHelper.getWritableDatabase();
 
         String selection = ItemPersistenceContract.ItemEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
-        String categorySelection = CategoryPersistenceContract.CategoryEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
+//        String categorySelection = CategoryPersistenceContract.CategoryEntry.COLUMN_NAME_CATEGORY_ID + " LIKE ?";
         String[] selectionArgs = {categoryId};
 
         itemsDatabase.delete(ItemPersistenceContract.ItemEntry.TABLE_NAME, selection, selectionArgs);
         itemsDatabase.close();
 
-        SQLiteDatabase categoryDatabase = categoryDbHelper.getWritableDatabase();
-        categoryDatabase.delete(CategoryPersistenceContract.CategoryEntry.TABLE_NAME, categorySelection, selectionArgs);
-        categoryDatabase.close();
+//        SQLiteDatabase categoryDatabase = categoryDbHelper.getWritableDatabase();
+//        categoryDatabase.delete(CategoryPersistenceContract.CategoryEntry.TABLE_NAME, categorySelection, selectionArgs);
+//        categoryDatabase.close();
     }
 
     @Override

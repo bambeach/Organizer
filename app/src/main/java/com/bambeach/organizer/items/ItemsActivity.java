@@ -1,28 +1,30 @@
 package com.bambeach.organizer.items;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 
 import com.bambeach.organizer.R;
 import com.bambeach.organizer.data.Category;
 import com.bambeach.organizer.data.Item;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
+import com.bambeach.organizer.itemdetail.EditItemDetailActivity;
 import com.bambeach.organizer.itemdetail.ItemDetailActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnListFragmentInteractionListener {
 
     private Category mCategory;
+    private OrganizerRepository mRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +37,10 @@ public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnL
             categoryId = intent.getStringExtra(Category.CATEGORY_ID_KEY);
         }
 
+        mRepository = OrganizerRepository.getInstance(getApplicationContext());
+
         if (categoryId != null) {
-            OrganizerRepository.getInstance(this).getCategory(categoryId, new OrganizerDataSource.LoadCategoryCallback() {
+            mRepository.getCategory(categoryId, new OrganizerDataSource.LoadCategoryCallback() {
                 @Override
                 public void onCategoryLoaded(Category category) {
                     if (category != null) {
@@ -64,39 +68,24 @@ public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnL
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(ItemsActivity.this);
-                builder.setView(R.layout.dialog_add_item)
-                        .setTitle(R.string.title_add_item_dialog)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                AlertDialog view = (AlertDialog) dialog;
-                                EditText text = (EditText) view.findViewById(R.id.item_name_edit_text);
-                                String itemName = null;
-                                if (text != null) {
-                                    itemName = text.getText().toString();
-                                }
-                                if (itemName == null) {
-                                    dialog.dismiss();
-                                }
-                                Item item = new Item(itemName, mCategory.getCategoryId());
-                                OrganizerRepository repository = OrganizerRepository.getInstance(ItemsActivity.this);
-                                repository.saveItem(item);
-                                ItemFragment fragment = (ItemFragment) getSupportFragmentManager().findFragmentByTag(ItemFragment.TAG);
-                                if (fragment != null) {
-                                    fragment.refreshData(mCategory.getCategoryId());
-                                }
-                                dialog.dismiss();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .create()
-                        .show();
+                Intent intent = new Intent(ItemsActivity.this, EditItemDetailActivity.class);
+                intent.putExtra(Category.CATEGORY_ID_KEY, mCategory.getCategoryId());
+                startActivity(intent);
+//                mRepository.getItems(mCategory.getCategoryId(), new OrganizerDataSource.LoadItemsCallback() {
+//                    @Override
+//                    public void onItemsLoaded(List<Item> items) {
+//                        List<String> itemNames = new ArrayList<>(items.size());
+//                        for (Item item : items) {
+//                            itemNames.add(item.getName());
+//                        }
+//                        addNewItem(itemNames);
+//                    }
+//
+//                    @Override
+//                    public void onDataNotAvailable() {
+//                        addNewItem(new ArrayList<String>());
+//                    }
+//                });
             }
         });
 
@@ -118,7 +107,8 @@ public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnL
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_delete:
-                OrganizerRepository.getInstance(this).deleteAllItems(mCategory.getCategoryId());
+                mRepository.deleteAllItems(mCategory.getCategoryId());
+                mRepository.deleteCategory(mCategory.getCategoryId());
                 onBackPressed();
                 return true;
         }
@@ -128,6 +118,22 @@ public class ItemsActivity extends AppCompatActivity implements ItemFragment.OnL
     @Override
     public void onListFragmentInteraction(Item item) {
         Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(Item.ITEM_ID_KEY, item.getItemId());
+        startActivity(intent);
+    }
+
+    private void addNewItem(List<String> itemNames) {
+        int counter = 1;
+        String newItemName = "Item" + counter;
+        while (itemNames.contains(newItemName)) {
+            counter++;
+            newItemName = "Item" + counter;
+        }
+
+        Item item = new Item(newItemName, mCategory.getCategoryId());
+        mRepository.saveItem(item);
+
+        Intent intent = new Intent(ItemsActivity.this, EditItemDetailActivity.class);
         intent.putExtra(Item.ITEM_ID_KEY, item.getItemId());
         startActivity(intent);
     }

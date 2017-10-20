@@ -15,6 +15,7 @@ import com.bambeach.organizer.data.Category;
 import com.bambeach.organizer.data.database.OrganizerDataSource;
 import com.bambeach.organizer.data.database.OrganizerRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public class CategoriesFragment extends Fragment {
     private int mColumnCount = 2;
     private OnListFragmentInteractionListener mListener;
     private OrganizerRepository mRepository;
-    private CategoriesRecyclerViewAdapter adapter;
+    private CategoriesRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -46,7 +47,7 @@ public class CategoriesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mRepository = OrganizerRepository.getInstance(getContext());
+        mRepository = OrganizerRepository.getInstance(getActivity().getApplicationContext());
     }
 
     @Override
@@ -54,7 +55,7 @@ public class CategoriesFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_category_list, container, false);
 
-        // Set the adapter
+        // Set the mAdapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             final RecyclerView recyclerView = (RecyclerView) view;
@@ -63,13 +64,14 @@ public class CategoriesFragment extends Fragment {
             mRepository.getCategories(new OrganizerDataSource.LoadCategoriesCallback() {
                 @Override
                 public void onCategoriesLoaded(List<Category> categories) {
-                    adapter = new CategoriesRecyclerViewAdapter(categories, mListener);
-                    recyclerView.setAdapter(adapter);
-            }
+                    mAdapter = new CategoriesRecyclerViewAdapter(categories, mListener);
+                    recyclerView.setAdapter(mAdapter);
+                }
 
                 @Override
                 public void onDataNotAvailable() {
-
+                    mAdapter = new CategoriesRecyclerViewAdapter(new ArrayList<Category>(0), mListener);
+                    recyclerView.setAdapter(mAdapter);
                 }
             });
 
@@ -77,6 +79,13 @@ public class CategoriesFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdapter != null) {
+            refreshData();
+        }
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -96,16 +105,16 @@ public class CategoriesFragment extends Fragment {
     }
 
     public void refreshData() {
-        if (adapter != null) {
+        if (mAdapter != null) {
             mRepository.getCategories(new OrganizerDataSource.LoadCategoriesCallback() {
                 @Override
                 public void onCategoriesLoaded(List<Category> categories) {
-                    adapter.setCategoryList(categories);
+                    mAdapter.setCategoryList(categories);
                 }
 
                 @Override
                 public void onDataNotAvailable() {
-
+                    mAdapter.setCategoryList(new ArrayList<Category>());
                 }
             });
         }
